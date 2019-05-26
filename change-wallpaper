@@ -10,19 +10,41 @@ fi
 
 # Get random picture from Unsplash
 function getPicture() {
-  # Get value of full size picture form Unsplash json
-  dataRequest=$(curl -s ${URL} | json_pp | grep "\"full\"" | awk -F "\"" '{print $4}')
-  echo ${dataRequest}
+  data=$(curl -s ${URL});
+  picture=$(echo ${data} | json_pp | grep "\"full\"" | awk -F "\"" '{print $4}' );
+  width=$(echo ${data} | json_pp | grep "\"width\"" | awk -F ":" '{print $2}' | tr ',' ' ');
+  height=$(echo ${data} | json_pp | grep "\"height\"" | awk -F ":" '{print $2}' | tr ',' ' ' );
+  ids=$(echo ${data} | json_pp | grep "\"id\"" | awk -F "\"" '{print $4}' );
+  parsedIds=(${ids}); # first id of the author, second of the picture
+  name=${parsedIds[1]};
 
-  # @TODO: Save it to the folder
-  # and name it somehow
-  pictureRequest=$(curl -s "${dataRequest}")
+  if [[ $((width / height)) != 1 ]]; then
+    getPicture
+  else
+    echo ${picture} ${name};
+    return
+  fi
+}
+
+# Save picture
+function savePicture() {
+  curl ${1} -s -o ${WALLPAPERS_DIRECTORY}${2}.jpg;
 }
 
 # Change wallpaper value
-# function setWallpaper() {
-#   sqlite3 ~/Library/Application\ Support/Dock/desktoppicture.db "update data set value = '${WALLPAPERS_DIRECTORY}${getPicture}'";
-#   killall Dock;
-# }
+ function setWallpaper() {
+   sqlite3 ~/Library/Application\ Support/Dock/desktoppicture.db \
+   "UPDATE data \
+   SET value = '${WALLPAPERS_DIRECTORY}' \
+   WHERE id = 1; \
+
+   UPDATE data \
+   SET value = '${WALLPAPERS_DIRECTORY}${1}' \
+   WHERE id = 2; \
+   ";
+   killall Dock;
+ }
 
 getPicture
+savePicture ${picture} ${name}
+setWallpaper ${name}
