@@ -1,10 +1,10 @@
 #!/bin/bash
 
-WALLPAPERS_DIRECTORY="~/Pictures/wallpapers-unsplash/";
+WALLPAPERS_DIRECTORY="~/Pictures/wallpapers-unsplash";
 URL="https://api.unsplash.com/photos/random/?client_id=09987f8449b94d9e98b41bf14747596e5557b2f7878853399d969bf38a54a611";
 
 # Check if folder for pictures exist
-if [[ -d "~/Pictures/wallpapers-unsplash/" ]]; then
+if [[ -d "~/Pictures/wallpapers-unsplash" ]]; then
   mkdir ~/Pictures/wallpapers-unsplash/
 fi
 
@@ -32,18 +32,16 @@ function savePicture() {
 }
 
 # Change wallpaper value
- function setWallpaper() {
-   sqlite3 ~/Library/Application\ Support/Dock/desktoppicture.db \
-   "UPDATE data \
-   SET value = '${WALLPAPERS_DIRECTORY}' \
-   WHERE id = 1; \
+function setWallpaper() {
+  # TODO: Properly update image and path
+  sqlite3 ~/Library/Application\ Support/Dock/desktoppicture.db \
+  "
+  INSERT OR REPLACE INTO 'main'.'data' ('value') VALUES ('${WALLPAPERS_DIRECTORY}');
 
-   UPDATE data \
-   SET value = '${WALLPAPERS_DIRECTORY}${1}' \
-   WHERE id = 2; \
-   ";
-   killall Dock;
- }
+  INSERT OR REPLACE INTO 'main'.'data' ('value') VALUES ('${WALLPAPERS_DIRECTORY}${1}.jpg');
+  ";
+  killall Dock;
+}
 
 getPicture
 savePicture ${picture} ${name}
